@@ -5,19 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Сыбайлас Жемқорлыққа қарсы Жауапкершілік</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800&family=Playfair+Display:wght@700&display=swap');
+        :root { color-scheme: dark; }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
 
         body {
             font-family: 'Montserrat', sans-serif;
             background: radial-gradient(circle at top right, #1e3a8a, #0f172a, #020617);
             color: #f8fafc;
-            scroll-behavior: smooth;
-            overflow-x: hidden;
+            margin: 0;
         }
+
+        .hero-title { font-family: 'Playfair Display', serif; }
 
         .glass-card {
             background: rgba(255, 255, 255, 0.05);
@@ -25,190 +30,501 @@
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 24px;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .glass-card:hover {
-            transform: translateY(-10px) scale(1.02);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(59, 130, 246, 0.2);
-            border: 1px solid rgba(59, 130, 246, 0.4);
         }
 
         .gold-text {
             background: linear-gradient(to right, #fbbf24, #f59e0b, #d97706);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         .gold-btn {
             background: linear-gradient(45deg, #f59e0b, #d97706);
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
         }
+        .gold-btn:hover { box-shadow: 0 0 20px rgba(245, 158, 11, 0.6); transform: scale(1.05); }
+        .gold-btn:disabled, .nav-btn:disabled { opacity: 0.3; pointer-events: none; }
 
-        .gold-btn:hover {
-            box-shadow: 0 0 20px rgba(245, 158, 11, 0.6);
-            transform: scale(1.05);
-        }
-
-        .hero-title {
-            font-family: 'Playfair Display', serif;
-        }
-
-        .floating {
-            animation: floating 3s ease-in-out infinite;
-        }
-
+        .floating { animation: floating 3s ease-in-out infinite; }
         @keyframes floating {
             0% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
+            50% { transform: translateY(-16px); }
             100% { transform: translateY(0px); }
         }
 
-        .quiz-option {
-            transition: all 0.2s ease;
-            cursor: pointer;
+        .slides-wrap {
+            position: absolute;
+            inset: 0;
+            top: 68px;
+            bottom: 64px;
         }
 
-        .quiz-option:hover {
-            background: rgba(59, 130, 246, 0.2);
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem clamp(1rem, 4vw, 3rem);
+            opacity: 0;
+            transform: translateX(40px);
+            transition: opacity 0.45s ease, transform 0.45s ease;
+            pointer-events: none;
+            overflow-y: auto;
+        }
+        .slide.active {
+            opacity: 1;
+            transform: translateX(0);
+            pointer-events: auto;
+        }
+        .slide.prev { transform: translateX(-40px); }
+
+        .slide-inner { max-width: 1100px; width: 100%; margin: auto; }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, #fbbf24, #d97706);
+            transition: width 0.4s ease;
         }
 
+        .quiz-option { transition: all 0.2s ease; cursor: pointer; }
+        .quiz-option:hover { background: rgba(59, 130, 246, 0.2); }
         .correct { background: rgba(34, 197, 94, 0.3) !important; border-color: #22c55e !important; }
         .wrong { background: rgba(239, 68, 68, 0.3) !important; border-color: #ef4444 !important; }
+
+        .nav-btn {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.15);
+            transition: all 0.2s ease;
+        }
+        .nav-btn:hover { background: rgba(245, 158, 11, 0.2); border-color: rgba(245,158,11,0.5); }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: rgba(245,158,11,0.4); border-radius: 10px; }
     </style>
 </head>
 <body>
 
-    <!-- Navigation -->
-    <nav class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center backdrop-blur-md border-b border-white/10">
-        <div class="text-2xl font-extrabold gold-text">LAW.KZ</div>
-        <div class="hidden md:flex space-x-8 font-medium">
-            <a href="#home" class="hover:text-yellow-500 transition">Басты бет</a>
-            <a href="#theory" class="hover:text-yellow-500 transition">Теория</a>
-            <a href="#penalties" class="hover:text-yellow-500 transition">Жауапкершілік</a>
-            <a href="#quiz" class="gold-btn px-4 py-1 rounded-full text-white text-sm">Quiz Ойыны</a>
+    <!-- Top bar -->
+    <nav class="fixed top-0 left-0 w-full z-40 h-[68px] px-4 md:px-8 flex justify-between items-center border-b border-white/10 bg-[#0f172a]/60 backdrop-blur-md">
+        <div class="flex items-center gap-3">
+            <i class="fas fa-balance-scale text-yellow-500 text-xl"></i>
+            <div class="text-xl font-extrabold gold-text">LAW.KZ</div>
+        </div>
+        <div class="hidden sm:block text-sm md:text-base font-medium text-gray-300 truncate max-w-[45vw]" id="slide-title">Тақырыбы</div>
+        <div class="flex items-center gap-3">
+            <span class="text-sm text-gray-400 font-semibold"><span id="slide-current">1</span>/<span id="slide-total">15</span></span>
+            <button id="quiz-open" class="gold-btn px-4 py-1.5 rounded-full text-white text-sm font-semibold"><i class="fas fa-circle-question mr-1"></i>Quiz</button>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section id="home" class="min-h-screen flex flex-col justify-center items-center text-center px-4 pt-20">
-        <div class="floating mb-8">
-            <i class="fas fa-balance-scale text-8xl text-yellow-500 drop-shadow-[0_0_30px_rgba(234,179,8,0.5)]"></i>
-        </div>
-        <h1 class="hero-title text-4xl md:text-7xl font-bold mb-6 max-w-5xl leading-tight" data-aos="fade-up">
-            Сыбайлас Жемқорлық Құқықбұзушылықтар үшін <span class="gold-text">Құқықтық Жауапкершілік</span>
-        </h1>
-        <p class="text-gray-400 text-lg md:text-xl max-w-2xl mb-10" data-aos="fade-up" data-aos-delay="200">
+    <!-- Progress -->
+    <div class="fixed top-[68px] left-0 w-full h-1 bg-white/5 z-40">
+        <div class="progress-bar" id="progress-bar" style="width: 6.66%;"></div>
+    </div>
 
-    <!-- Theory Section -->
-    <section id="theory" class="py-24 px-6 max-w-7xl mx-auto">
-        <h2 class="text-4xl font-bold text-center mb-16" data-aos="fade-down">
-            <span class="gold-text">Түсінік және</span> Негіздер
-        </h2>
-        
-        <div class="grid md:grid-cols-2 gap-12 items-center">
-            <div class="glass-card p-8" data-aos="fade-right">
-                <h3 class="text-2xl font-bold mb-4 text-yellow-500"><i class="fas fa-book-open mr-3"></i>Сыбайлас жемқорлық дегеніміз не?</h3>
-                <p class="text-gray-300 leading-relaxed text-lg">
-                    "Сыбайлас жемқорлыққа қарсы іс-қимыл туралы" Заңның 1-бабына сәйкес, бұл жауапты мемлекеттік лауазымды тұлғалардың өз өкілеттіктерін жеке мүддесі үшін немесе үшінші тұлғаларға игілік алу мақсатында <strong class="text-yellow-500">заңсыз пайдалануы</strong>.
+    <!-- Slides -->
+    <div class="slides-wrap" id="slides-wrap">
+
+        <!-- 1 -->
+        <section class="slide active" data-title="Тақырыбы">
+            <div class="slide-inner text-center flex flex-col items-center">
+                <div class="floating mb-8"><i class="fas fa-balance-scale text-7xl md:text-8xl text-yellow-500 drop-shadow-[0_0_30px_rgba(234,179,8,0.5)]"></i></div>
+                <h1 class="hero-title text-3xl md:text-6xl font-bold mb-6 leading-tight">
+                    Сыбайлас жемқорлық құқықбұзушылықтар үшін <span class="gold-text">құқықтық жауапкершілік</span>
+                </h1>
+                <p class="text-gray-400 text-base md:text-xl max-w-2xl mb-10">
+                    Мемлекеттік қызметтегі заңдылық пен әділдікті сақтау — әрбір лауазымды тұлғаның басты міндеті.
                 </p>
-                <div class="mt-6 p-4 bg-blue-900/30 border-l-4 border-yellow-500 rounded">
-                    <p class="italic text-sm text-gray-400">
-                        "Мемлекеттік қызметшілер өздерінің қызметтік міндеттерін орындамағаны үшін азаматтық-құқықтық, тәртіптік, әкімшілік және қылмыстық жауаптылыққа тартылады."
+                <div class="flex flex-wrap justify-center gap-3 text-sm text-gray-400">
+                    <span class="glass-card px-4 py-2"><i class="fas fa-book mr-2 text-yellow-500"></i>1. Түсінігі</span>
+                    <span class="glass-card px-4 py-2"><i class="fas fa-handcuffs mr-2 text-red-400"></i>2. Қылмыстық жауапкершілік</span>
+                    <span class="glass-card px-4 py-2"><i class="fas fa-file-invoice-dollar mr-2 text-blue-400"></i>3. Әкімшілік жауапкершілік</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2 -->
+        <section class="slide" data-title="Жоспар">
+            <div class="slide-inner">
+                <h2 class="text-3xl md:text-4xl font-bold text-center mb-12"><span class="gold-text">Баяндама</span> жоспары</h2>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="glass-card p-8 text-center">
+                        <div class="w-16 h-16 bg-yellow-500/20 text-yellow-500 rounded-full flex items-center justify-center text-2xl mx-auto mb-5"><i class="fas fa-book-open"></i></div>
+                        <h3 class="text-xl font-bold mb-3">1. Түсінігі</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Сыбайлас жемқорлық дегеніміз не, жауаптылық түрлері, тәртіптік теріс қылықтар мен шектеулер</p>
+                    </div>
+                    <div class="glass-card p-8 text-center">
+                        <div class="w-16 h-16 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center text-2xl mx-auto mb-5"><i class="fas fa-handcuffs"></i></div>
+                        <h3 class="text-xl font-bold mb-3">2. Қылмыстық жауапкершілік</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">ҚК 15-тарауы, сыбайлас жемқорлық қылмыстар тізімі және жаза түрлері</p>
+                    </div>
+                    <div class="glass-card p-8 text-center">
+                        <div class="w-16 h-16 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center text-2xl mx-auto mb-5"><i class="fas fa-file-invoice-dollar"></i></div>
+                        <h3 class="text-xl font-bold mb-3">3. Әкімшілік жауапкершілік</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">34-тарау, уәкілетті органдар, хабарлау тәртібі және 1424 желісі</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3 -->
+        <section class="slide" data-title="1. Сыбайлас жемқорлық дегеніміз не?">
+            <div class="slide-inner grid md:grid-cols-2 gap-10 items-center">
+                <div class="glass-card p-8">
+                    <h3 class="text-2xl font-bold mb-4 text-yellow-500"><i class="fas fa-book-open mr-3"></i>Сыбайлас жемқорлық дегеніміз не?</h3>
+                    <p class="text-gray-300 leading-relaxed text-base md:text-lg">
+                        "Сыбайлас жемқорлыққа қарсы іс-қимыл туралы" Заңның 1-бабы 6-тармақшасына сәйкес — жауапты мемлекеттік лауазымды адамдардың, мемлекеттік функцияларды орындауға уәкілеттік берілген адамдардың өз
+                        <strong class="text-yellow-500">лауазымдық өкілеттіктерін</strong> жеке өзіне не үшінші тұлғаларға мүліктік игіліктер алу мақсатында <strong class="text-yellow-500">заңсыз пайдалануы</strong>, сол сияқты осындай игіліктер беру арқылы оларды сатып алу.
                     </p>
-                </div}
+                </div>
+                <div class="glass-card p-8 border-yellow-500/30">
+                    <i class="fas fa-quote-left text-yellow-500 text-2xl mb-4"></i>
+                    <p class="italic text-gray-300 text-base md:text-lg leading-relaxed">
+                        Мемлекеттік қызметшілер өздерінің қызметтік міндеттерін орындамағаны немесе тиісінше орындамағаны үшін ҚР заңдарына сәйкес <strong class="text-white">азаматтық-құқықтық, тәртіптік, әкімшілік, қылмыстық</strong> жауаптылықта болады.
+                    </p>
+                </div>
             </div>
-            <div class="relative" data-aos="fade-left">
-                <img src="https://cdn-icons-png.flaticon.com/512/2620/2620627.png" class="w-full max-w-md mx-auto floating" alt="Law Icon">
-            </div>
-        </div>
-    </section>
+        </section>
 
-            Мемлекеттік қызметтегі заңдылық пен әділдікті сақтау - әрбір лауазымды тұлғаның басты міндеті.
-        </p>
-        <div class="flex space-x-4" data-aos="fade-up" data-aos-delay="400">
-            <a href="#theory" class="gold-btn px-8 py-4 rounded-full font-bold text-lg text-white">Бастау</a>
-
-    <!-- Penalties Section -->
-    <section id="penalties" class="py-24 px-6 bg-white/5">
-        <div class="max-w-7xl mx-auto">
-            <h2 class="text-4xl font-bold text-center mb-16" data-aos="fade-down">
-                Жауапкершілік <span class="gold-text">Түрлері</span>
-            </h2>
-            
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Disciplinary -->
-                <div class="glass-card p-8 text-center" data-aos="zoom-in" data-aos-delay="100">
-                    <div class="w-16 h-16 bg-yellow-500/20 text-yellow-500 rounded-full flex items-center justify-center text-2xl mx-auto mb-6">
-                        <i class="fas fa-user-slash"></i>
+        <!-- 4 -->
+        <section class="slide" data-title="Жалпы жауаптылық негіздері">
+            <div class="slide-inner">
+                <h2 class="text-3xl font-bold text-center mb-10"><i class="fas fa-gavel text-yellow-500 mr-3"></i>Жалпы жауаптылық <span class="gold-text">негіздері</span></h2>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="glass-card p-6">
+                        <h4 class="font-bold text-lg mb-2 text-yellow-500">Құқыққа сыйымсыз өкім</h4>
+                        <p class="text-gray-400 text-sm leading-relaxed">Өкімнің заңдылығына күмәнданған қызметші бұл жөнінде тікелей басшысына және өкімді берген басшыға жазбаша дереу хабарлайды. Жоғары басшы жазбаша растаса — қызметші оны орындауға міндетті, бірақ бұл қылмыстық жазаланатын әрекетке әкелмеуі тиіс.</p>
                     </div>
-                    <h3 class="text-2xl font-bold mb-4">Тәртіптік</h3>
-                    <ul class="text-gray-400 space-y-3 text-left mb-6">
-                        <li><i class="fas fa-check text-yellow-500 mr-2"></i> Ескерту, сөгіс (Елеусіз)</li>
-                        <li><i class="fas fa-check text-yellow-500 mr-2"></i> Лауазымын төмендету (Елеулі)</li>
-                        <li><i class="fas fa-check text-yellow-500 mr-2"></i> Қызметтен шығару (Өрескел)</li>
+                    <div class="glass-card p-6">
+                        <h4 class="font-bold text-lg mb-2 text-yellow-500">Шағымдану құқығы</h4>
+                        <p class="text-gray-400 text-sm leading-relaxed">Мемлекеттік қызметшілердің өздеріне қатысты мемлекеттік орган қабылдаған шешімдер мен әрекеттерге (әрекетсіздікке) ҚР заңдарында белгіленген тәртіппен шағым жасауға құқығы бар.</p>
+                    </div>
+                    <div class="glass-card p-6 md:col-span-2">
+                        <h4 class="font-bold text-lg mb-2 text-yellow-500">Тәртіптік теріс қылық дегеніміз не?</h4>
+                        <p class="text-gray-400 text-sm leading-relaxed">Қызметшінің өзіне жүктелген міндеттерді құқыққа қайшы, кінәлі түрде орындамауы немесе тиісінше орындамауы, өкілеттіктерін асыра пайдалануы, қызметтік тәртіп пен әдепті бұзуы, сол сияқты мемлекеттік қызметке байланысты заңды шектеулерді сақтамауы.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5 -->
+        <section class="slide" data-title="Тәртіптік теріс қылықтың түрлері">
+            <div class="slide-inner">
+                <h2 class="text-3xl font-bold text-center mb-10"><i class="fas fa-layer-group text-yellow-500 mr-3"></i>Тәртіптік теріс қылықтың <span class="gold-text">түрлері</span></h2>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="glass-card p-7 border-green-500/20">
+                        <div class="w-12 h-12 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center text-xl mb-4"><i class="fas fa-circle-exclamation"></i></div>
+                        <h3 class="text-xl font-bold mb-3">Елеусіз</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Жазасы жоқ қызметшінің теріс қылығы. Жаза: <strong class="text-white">ескерту, сөгіс немесе қатаң сөгіс.</strong></p>
+                    </div>
+                    <div class="glass-card p-7 border-yellow-500/20">
+                        <div class="w-12 h-12 bg-yellow-500/20 text-yellow-400 rounded-full flex items-center justify-center text-xl mb-4"><i class="fas fa-triangle-exclamation"></i></div>
+                        <h3 class="text-xl font-bold mb-3">Елеулі</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Алынбаған ескерту/сөгіс/қатаң сөгіс бар кезде жасалған теріс қылық. Жаза: <strong class="text-white">қызметіне сәйкес еместігі туралы ескерту немесе лауазымын төмендету.</strong></p>
+                    </div>
+                    <div class="glass-card p-7 border-red-500/20">
+                        <div class="w-12 h-12 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center text-xl mb-4"><i class="fas fa-circle-xmark"></i></div>
+                        <h3 class="text-xl font-bold mb-3">Өрескел</h3>
+                        <p class="text-gray-400 text-sm leading-relaxed">Қызметтен шығаруға негіз болатын немесе алынбаған ауыр жазасы бар кезде жасалған теріс қылық. Жаза: <strong class="text-white">атқаратын лауазымынан босату.</strong></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6 -->
+        <section class="slide" data-title="Тәртіптік жаза түрлері">
+            <div class="slide-inner">
+                <h2 class="text-3xl font-bold text-center mb-10"><i class="fas fa-scale-unbalanced text-yellow-500 mr-3"></i>Тәртіптік жаза <span class="gold-text">түрлері</span></h2>
+                <div class="glass-card p-8">
+                    <ol class="space-y-4 text-gray-300 text-base md:text-lg">
+                        <li class="flex items-center gap-4"><span class="text-yellow-500 font-bold w-8">1</span>Ескерту</li>
+                        <li class="flex items-center gap-4"><span class="text-yellow-500 font-bold w-8">2</span>Сөгіс</li>
+                        <li class="flex items-center gap-4"><span class="text-yellow-500 font-bold w-8">3</span>Қатаң сөгіс</li>
+                        <li class="flex items-center gap-4"><span class="text-yellow-500 font-bold w-8">4</span>Қызметке толық сәйкес еместігі туралы ескерту</li>
+                        <li class="flex items-center gap-4"><span class="text-yellow-500 font-bold w-8">4-1</span>Мемлекеттік лауазымды төмендету (сайланатын қызметшілерден басқа)</li>
+                        <li class="flex items-center gap-4"><span class="text-yellow-500 font-bold w-8">5</span>Атқаратын мемлекеттік лауазымынан шығару</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7 -->
+        <section class="slide" data-title="Мемлекеттік қызметке кір келтіретін әрекеттер I">
+            <div class="slide-inner">
+                <h2 class="text-2xl md:text-3xl font-bold text-center mb-8"><i class="fas fa-ban text-red-400 mr-3"></i>Қызметке <span class="gold-text">кір келтіретін</span> әрекеттер (I)</h2>
+                <div class="glass-card p-7">
+                    <ul class="grid md:grid-cols-2 gap-x-8 gap-y-3 text-gray-300 text-sm md:text-base">
+                        <li><i class="fas fa-xmark text-red-400 mr-2"></i>Басқа мемлекеттік органдардың қызметіне заңсыз араласу</li>
+                        <li><i class="fas fa-xmark text-red-400 mr-2"></i>Өкілеттікті өзінің немесе туыстарының мүддесі үшін пайдалану</li>
+                        <li><i class="fas fa-xmark text-red-400 mr-2"></i>Қызметке алу/жоғарылатуда тамыр-таныстық жасау</li>
+                        <li><i class="fas fa-xmark text-red-400 mr-2"></i>Шешім қабылдауда жеке/заңды тұлғаларға заңсыз қолдау көрсету</li>
+                        <li><i class="fas fa-xmark text-red-400 mr-2"></i>Кәсіпкерлікте заңда көзделмеген жәрдем көрсету</li>
+                        <li><i class="fas fa-xmark text-red-400 mr-2"></i>Қызметтік ақпаратты жеке/топтық мүдде үшін пайдалану</li>
+                        <li><i class="fas fa-xmark text-red-400 mr-2"></i>Ақпарат беруден негізсіз бас тарту немесе бұрмалап беру</li>
+                        <li><i class="fas fa-xmark text-red-400 mr-2"></i>Заңда көзделмеген ақпаратты талап ету</li>
+                        <li><i class="fas fa-xmark text-red-400 mr-2"></i>Мемлекеттік қаржы-материалдық ресурстарды сайлау қорына беру</li>
                     </ul>
                 </div>
+            </div>
+        </section>
 
-                <!-- Criminal -->
-                <div class="glass-card p-8 text-center border-yellow-500/30" data-aos="zoom-in" data-aos-delay="200">
-                    <div class="w-16 h-16 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center text-2xl mx-auto mb-6">
-                        <i class="fas fa-handcuffs"></i>
+        <!-- 8 -->
+        <section class="slide" data-title="Мемлекеттік қызметке кір келтіретін әрекеттер II">
+            <div class="slide-inner">
+                <h2 class="text-2xl md:text-3xl font-bold text-center mb-8"><i class="fas fa-gift text-red-400 mr-3"></i>Қызметке <span class="gold-text">кір келтіретін</span> әрекеттер (II)</h2>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <div class="glass-card p-6">
+                        <ul class="space-y-3 text-gray-300 text-sm leading-relaxed">
+                            <li><i class="fas fa-xmark text-red-400 mr-2"></i>Лауазымды пайдаланып сыйлық/қызмет талап ету</li>
+                            <li><i class="fas fa-xmark text-red-400 mr-2"></i>Тұлғалардың құқығын іске асыруына ашық кедергі жасау</li>
+                            <li><i class="fas fa-xmark text-red-400 mr-2"></i>Кәсіпкерлікті тексеру талаптарын өрескел бұзу</li>
+                            <li><i class="fas fa-xmark text-red-400 mr-2"></i>Бақылау-қадағалау өкілеттігін мемлекеттік емес ұйымға беру</li>
+                            <li><i class="fas fa-xmark text-red-400 mr-2"></i>Басшылармен/бағыныштылармен ақшалай құмар ойындарға қатысу</li>
+                        </ul>
                     </div>
-                    <h3 class="text-2xl font-bold mb-4">Қылмыстық</h3>
-                    <ul class="text-gray-400 space-y-3 text-left mb-6">
-                        <li><i class="fas fa-check text-red-500 mr-2"></i> Мүлкін тәркілеу</li>
-                        <li><i class="fas fa-check text-red-500 mr-2"></i> Айыппұл салу</li>
-                        <li><i class="fas fa-check text-red-500 mr-2"></i> Бас бостандығынан айыру</li>
+                    <div class="glass-card p-6 border-yellow-500/30">
+                        <h4 class="font-bold text-yellow-500 mb-3"><i class="fas fa-circle-info mr-2"></i>Сыйлықтар мен сапарлар ережесі</h4>
+                        <ul class="space-y-2 text-gray-300 text-sm leading-relaxed">
+                            <li>Хабарсыз түскен ақша/сыйлық — <strong class="text-white">7 күнтізбелік күн</strong> ішінде мемлекетке өткізіледі</li>
+                            <li>Шетелдік/отандық тұлғалар есебінен туристік-сауықтыру сапарларға шақыруды қабылдауға болмайды</li>
+                            <li>Кредит, бағалы қағаз, жылжымайтын мүлік алуда заңсыз артықшылық пайдалануға тыйым салынады</li>
+                            <li>Шектеулер отбасы мүшелеріне де қолданылады</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 9 -->
+        <section class="slide" data-title="2. Қылмыстық жауапкершілікке көшу">
+            <div class="slide-inner text-center">
+                <div class="floating mb-6"><i class="fas fa-landmark text-6xl text-yellow-500"></i></div>
+                <h2 class="text-2xl md:text-4xl font-bold mb-6">Енді — <span class="gold-text">2-тақырып:</span> Сыбайлас жемқорлық қылмыстары үшін қылмыстық жауапкершілік</h2>
+                <p class="text-gray-400 max-w-2xl mx-auto text-base md:text-lg">ҚР Қылмыстық кодексінің 15-тарауы мемлекеттік қызмет пен мемлекеттік басқару мүдделеріне қарсы сыбайлас жемқорлық қылмыстарды реттейді.</p>
+            </div>
+        </section>
+
+        <!-- 10 -->
+        <section class="slide" data-title="ҚК 15-тарау: баптар тізімі">
+            <div class="slide-inner">
+                <h2 class="text-2xl md:text-3xl font-bold text-center mb-8"><i class="fas fa-scroll text-yellow-500 mr-3"></i>ҚК 15-тарау: <span class="gold-text">баптар тізімі</span></h2>
+                <div class="glass-card p-7">
+                    <ul class="grid md:grid-cols-2 gap-x-8 gap-y-2.5 text-gray-300 text-sm md:text-base">
+                        <li><strong class="text-yellow-500">361-бап</strong> — Лауазымдық өкілеттіктерді теріс пайдалану</li>
+                        <li><strong class="text-yellow-500">362-бап</strong> — Билікті/өкілеттікті асыра пайдалану</li>
+                        <li><strong class="text-yellow-500">363-бап</strong> — Лауазымды адамның өкілеттіктерін иемденіп алу</li>
+                        <li><strong class="text-yellow-500">364-бап</strong> — Кәсіпкерлік қызметке заңсыз қатысу</li>
+                        <li><strong class="text-yellow-500">365-бап</strong> — Заңды кәсіпкерлік қызметке кедергі жасау</li>
+                        <li><strong class="text-yellow-500">366-бап</strong> — Пара алу</li>
+                        <li><strong class="text-yellow-500">367-бап</strong> — Пара беру</li>
+                        <li><strong class="text-yellow-500">368-бап</strong> — Парақорлыққа делдал болу</li>
+                        <li><strong class="text-yellow-500">369-бап</strong> — Қызметтік жалғандық жасау</li>
+                        <li><strong class="text-yellow-500">370-бап</strong> — Қызметтегі әрекетсіздік</li>
+                        <li><strong class="text-yellow-500">370-1, 370-2-баптар</strong> — Басшының/қызметкердің әрекетсіздігі</li>
+                        <li><strong class="text-yellow-500">371-бап</strong> — Салғырттық</li>
                     </ul>
                 </div>
+            </div>
+        </section>
 
-                <!-- Administrative -->
+        <!-- 11 -->
+        <section class="slide" data-title="Сыбайлас жемқорлық қылмыстары және жаза түрлері">
+            <div class="slide-inner grid md:grid-cols-2 gap-8 items-start">
+                <div class="glass-card p-7">
+                    <h3 class="text-xl font-bold mb-3 text-yellow-500"><i class="fas fa-handcuffs mr-2"></i>Сыбайлас жемқорлық қылмыстар</h3>
+                    <p class="text-gray-400 text-sm leading-relaxed">ҚК-нің 189, 190, 218, 218-1, 234, 249-баптарының жекелеген бөліктерінде, сондай-ақ <strong class="text-white">361, 362, 364, 365, 366, 367, 368, 369, 370, 450, 451, 452-баптарында</strong> көзделген іс-әрекеттер сыбайлас жемқорлық қылмыстар болып танылады.</p>
+                </div>
+                <div class="glass-card p-7 border-red-500/30">
+                    <h3 class="text-xl font-bold mb-3 text-red-400"><i class="fas fa-gavel mr-2"></i>Қолданылатын жаза түрлері</h3>
+                    <ul class="text-gray-300 text-sm space-y-2">
+                        <li><i class="fas fa-check text-red-400 mr-2"></i>Мүлкін тәркілеу</li>
+                        <li><i class="fas fa-check text-red-400 mr-2"></i>Лауазымдарды атқару/қызметпен айналысу құқығынан өмір бойы айыру</li>
+                        <li><i class="fas fa-check text-red-400 mr-2"></i>Айыппұл салу</li>
+                        <li><i class="fas fa-check text-red-400 mr-2"></i>Түзеу және қоғамдық жұмыстарға тарту</li>
+                        <li><i class="fas fa-check text-red-400 mr-2"></i>Бас бостандығын шектеу</li>
+                        <li><i class="fas fa-check text-red-400 mr-2"></i>Бас бостандығынан айыру</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
 
-    <!-- HotLine Section -->
-    <section class="py-20 px-6 text-center">
-        <div class="glass-card max-w-4xl mx-auto p-12 border-yellow-500/50 relative overflow-hidden" data-aos="flip-up">
-            <div class="absolute -top-10 -right-10 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl"></div>
-            <h2 class="text-3xl font-bold mb-6">Сыбайлас жемқорлықты тоқтатуға көмектесіңіз!</h2>
-            <div class="text-6xl font-black gold-text mb-6 tracking-widest">1424</div>
-            <p class="text-gray-400 text-lg mb-8">Тегін call-орталығы. Сіздің ақпаратыңыз құпия сақталады және мемлекет қорғауында боласыз.</p>
-            <i class="fas fa-phone-alt text-4xl text-yellow-500 animate-bounce"></i>
-        </div>
-    </section>
+        <!-- 12 -->
+        <section class="slide" data-title="3. Әкімшілік жауапкершілік">
+            <div class="slide-inner">
+                <h2 class="text-2xl md:text-3xl font-bold text-center mb-8"><i class="fas fa-file-invoice-dollar text-blue-400 mr-3"></i>3-тақырып: <span class="gold-text">Әкімшілік жауапкершілік</span></h2>
+                <p class="text-center text-gray-400 mb-6 max-w-2xl mx-auto text-sm md:text-base">Сыбайлас жемқорлық құқықбұзушылықтар үшін жауапкершілік Қылмыстық кодекс пен "Әкімшілік құқық бұзушылық туралы" кодексте көзделген. 34-тарау — Әкімшілік сыбайлас жемқорлық құқықбұзушылықтар.</p>
+                <div class="glass-card p-7">
+                    <ul class="grid md:grid-cols-2 gap-x-8 gap-y-2.5 text-gray-300 text-sm md:text-base">
+                        <li><strong class="text-blue-400">676-бап</strong> — Жеке тұлғалардың заңсыз материалдық сыйақы беруі</li>
+                        <li><strong class="text-blue-400">677-бап</strong> — Уәкілетті/теңестірілген тұлғаның заңсыз сыйақы алуы</li>
+                        <li><strong class="text-blue-400">678-бап</strong> — Заңды тұлғалардың заңсыз материалдық сыйақы беруі</li>
+                        <li><strong class="text-blue-400">679-бап</strong> — Мемлекеттік/жергілікті органдардың заңсыз кәсіпкерлігі</li>
+                        <li><strong class="text-blue-400">680-бап</strong> — Басшылардың сыбайлас жемқорлыққа қарсы шара қабылдамауы</li>
+                        <li><strong class="text-blue-400">681-бап</strong> — Бұрын сыбайлас жемқорлық қылмыс жасағандарды жұмысқа алу</li>
+                    </ul>
+                    <div class="mt-6 p-4 bg-blue-900/30 border-l-4 border-blue-400 rounded">
+                        <p class="text-white font-semibold"><i class="fas fa-circle-exclamation mr-2 text-blue-400"></i>Қолданылатын негізгі шара: Айыппұл салу</p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    <!-- Quiz Section -->
-    <section id="quiz" class="py-24 px-6 max-w-4xl mx-auto">
-        <div class="text-center mb-16">
-            <h2 class="text-4xl font-bold mb-4">Біліміңізді <span class="gold-text">Тексеріңіз</span></h2>
-            <p class="text-gray-400">Сұрақтарға дұрыс жауап беріп, ұпай жинаңыз!</p>
-        </div>
+        <!-- 13 -->
+        <section class="slide" data-title="Уәкілетті органдар">
+            <div class="slide-inner">
+                <h2 class="text-2xl md:text-3xl font-bold text-center mb-8"><i class="fas fa-shield-halved text-yellow-500 mr-3"></i>Уәкілетті <span class="gold-text">органдар</span></h2>
+                <div class="glass-card p-7 mb-5 border-yellow-500/30">
+                    <p class="text-gray-200 text-base"><i class="fas fa-star text-yellow-500 mr-2"></i><strong>ҚР Сыбайлас жемқорлыққа қарсы іс-қимыл агенттігі</strong> — сыбайлас жемқорлыққа қарсы саясатты іске асыру және үйлестіру жөніндегі уәкілетті орган.</p>
+                </div>
+                <div class="grid md:grid-cols-2 gap-5">
+                    <div class="glass-card p-6">
+                        <p class="text-gray-300 text-sm leading-relaxed">Құқықбұзушылықтарды анықтау, жолын кесу, ашу, тергеп-тексеру және алдын алуды өз құзыреті шегінде жүзеге асырады:</p>
+                        <ul class="mt-3 space-y-2 text-gray-300 text-sm">
+                            <li><i class="fas fa-building-shield text-yellow-500 mr-2"></i>Прокуратура</li>
+                            <li><i class="fas fa-building-shield text-yellow-500 mr-2"></i>Ұлттық қауіпсіздік органдары</li>
+                            <li><i class="fas fa-building-shield text-yellow-500 mr-2"></i>Ішкі істер, әскери полиция органдары</li>
+                            <li><i class="fas fa-building-shield text-yellow-500 mr-2"></i>Экономикалық тергеп-тексеру қызметі</li>
+                            <li><i class="fas fa-building-shield text-yellow-500 mr-2"></i>ҰҚК Шекара қызметі</li>
+                        </ul>
+                    </div>
+                    <div class="glass-card p-6">
+                        <p class="text-gray-300 text-sm leading-relaxed">Сыбайлас жемқорлыққа қарсы іс-қимылды өз құзыреті шегінде <strong class="text-white">барлық мемлекеттік органдар, ұйымдар, квазимемлекеттік сектор субъектілері және лауазымды тұлғалар</strong> жүргізуге міндетті.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-        <div id="quiz-container" class="glass-card p-8 md:p-12">
+        <!-- 14 -->
+        <section class="slide" data-title="Хабарлау тәртібі және қорғау">
+            <div class="slide-inner text-center">
+                <div class="glass-card max-w-3xl mx-auto p-10 border-yellow-500/50 relative overflow-hidden">
+                    <div class="absolute -top-10 -right-10 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl"></div>
+                    <h2 class="text-2xl md:text-3xl font-bold mb-5">Сыбайлас жемқорлықты тоқтатуға <span class="gold-text">көмектесіңіз!</span></h2>
+                    <div class="text-5xl md:text-6xl font-black gold-text mb-5 tracking-widest">1424</div>
+                    <p class="text-gray-400 text-sm md:text-base mb-6">Тегін call-орталығы. Хабарлаған адам мемлекет қорғауында болады және көтермеленеді, ал ол туралы ақпарат мемлекеттік құпия болып табылады.</p>
+                    <div class="grid md:grid-cols-2 gap-4 text-left text-sm text-gray-300">
+                        <div class="bg-white/5 rounded-xl p-4"><i class="fas fa-user-shield text-yellow-500 mr-2"></i>Хабарлаған/жәрдем көрсеткен адам мемлекеттің қорғауында болады</div>
+                        <div class="bg-white/5 rounded-xl p-4"><i class="fas fa-triangle-exclamation text-red-400 mr-2"></i>Көрінеу жалған ақпарат бергені үшін заңға сәйкес жауапты болады</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 15 -->
+        <section class="slide" data-title="Қорытынды">
+            <div class="slide-inner">
+                <h2 class="text-3xl font-bold text-center mb-10">Жауапкершілік <span class="gold-text">түрлерінің қорытындысы</span></h2>
+                <div class="grid md:grid-cols-3 gap-6 mb-8">
+                    <div class="glass-card p-6 text-center">
+                        <div class="w-14 h-14 bg-yellow-500/20 text-yellow-500 rounded-full flex items-center justify-center text-xl mx-auto mb-4"><i class="fas fa-user-slash"></i></div>
+                        <h3 class="text-lg font-bold mb-2">Тәртіптік</h3>
+                        <p class="text-gray-400 text-sm">Ескертуден — қызметтен шығаруға дейін</p>
+                    </div>
+                    <div class="glass-card p-6 text-center">
+                        <div class="w-14 h-14 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center text-xl mx-auto mb-4"><i class="fas fa-handcuffs"></i></div>
+                        <h3 class="text-lg font-bold mb-2">Қылмыстық</h3>
+                        <p class="text-gray-400 text-sm">Тәркілеуден — бас бостандығынан айыруға дейін</p>
+                    </div>
+                    <div class="glass-card p-6 text-center">
+                        <div class="w-14 h-14 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center text-xl mx-auto mb-4"><i class="fas fa-file-invoice-dollar"></i></div>
+                        <h3 class="text-lg font-bold mb-2">Әкімшілік</h3>
+                        <p class="text-gray-400 text-sm">Негізгі шара — айыппұл салу</p>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <p class="text-gray-400 mb-4">Білімді тексеру үшін Quiz ойынын бастаңыз</p>
+                    <button id="quiz-open-2" class="gold-btn px-8 py-3 rounded-full font-bold text-white"><i class="fas fa-circle-question mr-2"></i>Quiz ойынын бастау</button>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Bottom controls -->
+    <div class="fixed bottom-0 left-0 w-full z-40 h-16 px-4 md:px-8 flex items-center justify-between border-t border-white/10 bg-[#0f172a]/60 backdrop-blur-md">
+        <button id="prev-btn" class="nav-btn px-5 py-2.5 rounded-full text-sm font-semibold flex items-center gap-2"><i class="fas fa-chevron-left"></i><span class="hidden sm:inline">Алдыңғы</span></button>
+        <span class="text-xs text-gray-500 hidden md:inline">← → пернелерімен де шарлауға болады</span>
+        <button id="next-btn" class="gold-btn px-5 py-2.5 rounded-full text-sm font-semibold text-white flex items-center gap-2"><span class="hidden sm:inline">Келесі</span><i class="fas fa-chevron-right"></i></button>
+    </div>
+
+    <!-- Quiz Modal -->
+    <div id="quiz-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div class="glass-card w-full max-w-2xl p-8 relative">
+            <button id="quiz-close" class="absolute top-4 right-5 text-gray-400 hover:text-white text-xl"><i class="fas fa-xmark"></i></button>
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold mb-2">Біліміңізді <span class="gold-text">Тексеріңіз</span></h2>
+                <p class="text-gray-400 text-sm">Сұрақтарға дұрыс жауап беріп, ұпай жинаңыз!</p>
+            </div>
             <div id="question-box">
-                <div class="flex justify-between items-center mb-8">
+                <div class="flex justify-between items-center mb-6">
                     <span id="progress" class="text-yellow-500 font-bold">Сұрақ 1/4</span>
                     <span id="score" class="text-gray-400">Ұпай: 0</span>
                 </div>
-                <h3 id="question-text" class="text-2xl font-semibold mb-8">Сұрақ мәтіні осы жерде болады...</h3>
-                <div id="options-grid" class="grid gap-4"></div>
+                <h3 id="question-text" class="text-xl font-semibold mb-6">Сұрақ мәтіні осы жерде болады...</h3>
+                <div id="options-grid" class="grid gap-3"></div>
             </div>
-            
             <div id="result-box" class="hidden text-center">
-                <i class="fas fa-trophy text-7xl text-yellow-500 mb-6"></i>
-                <h3 class="text-3xl font-bold mb-4">Құттықтаймыз!</h3>
-                <p id="final-score" class="text-xl text-gray-300 mb-8">Сіздің нәтижеңіз: 0/4</p>
-                <button onclick="location.reload()" class="gold-btn px-8 py-3 rounded-full font-bold text-white">Қайта бастау</button>
+                <i class="fas fa-trophy text-6xl text-yellow-500 mb-5"></i>
+                <h3 class="text-2xl font-bold mb-3">Құттықтаймыз!</h3>
+                <p id="final-score" class="text-lg text-gray-300 mb-6">Сіздің нәтижеңіз: 0/4</p>
+                <button id="quiz-restart" class="gold-btn px-8 py-3 rounded-full font-bold text-white">Қайта бастау</button>
             </div>
         </div>
-    </section>
-
-    <!-- Footer -->
-    <footer class="py-12 text-center border-t border-white/10 text-gray-500">
-        <p>&copy; 2026 Law Presentation. Барлық құқықтар қорғалған.</p>
-    </footer>
+    </div>
 
     <script>
-        AOS.init({ duration: 1000, once: true });
+        // ---- Slide paging ----
+        const slides = Array.from(document.querySelectorAll('.slide'));
+        const total = slides.length;
+        let current = 0;
+
+        const titleEl = document.getElementById('slide-title');
+        const currentEl = document.getElementById('slide-current');
+        const totalEl = document.getElementById('slide-total');
+        const progressBar = document.getElementById('progress-bar');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        totalEl.textContent = total;
+
+        function render() {
+            slides.forEach((s, i) => {
+                s.classList.toggle('active', i === current);
+                s.classList.toggle('prev', i < current);
+            });
+            titleEl.textContent = slides[current].dataset.title || '';
+            currentEl.textContent = current + 1;
+            progressBar.style.width = ((current + 1) / total * 100) + '%';
+            prevBtn.disabled = current === 0;
+            nextBtn.disabled = current === total - 1;
+            slides[current].scrollTop = 0;
+        }
+
+        function goTo(i) {
+            if (i < 0 || i >= total) return;
+            current = i;
+            render();
+        }
+
+        prevBtn.addEventListener('click', () => goTo(current - 1));
+        nextBtn.addEventListener('click', () => goTo(current + 1));
+
+        document.addEventListener('keydown', (e) => {
+            if (!quizModal.classList.contains('hidden')) return;
+            if (e.key === 'ArrowRight' || e.key === ' ') goTo(current + 1);
+            if (e.key === 'ArrowLeft') goTo(current - 1);
+        });
+
+        render();
+
+        // ---- Quiz ----
+        const quizModal = document.getElementById('quiz-modal');
+        document.getElementById('quiz-open').addEventListener('click', () => quizModal.classList.remove('hidden'));
+        document.getElementById('quiz-open-2').addEventListener('click', () => quizModal.classList.remove('hidden'));
+        document.getElementById('quiz-close').addEventListener('click', () => quizModal.classList.add('hidden'));
+        quizModal.addEventListener('click', (e) => { if (e.target === quizModal) quizModal.classList.add('hidden'); });
 
         const quizData = [
             {
@@ -244,7 +560,7 @@
             optionsGrid.innerHTML = '';
             q.options.forEach((option, index) => {
                 const btn = document.createElement('div');
-                btn.className = 'quiz-option p-4 rounded-xl border border-white/10 bg-white/5 text-lg font-medium';
+                btn.className = 'quiz-option p-4 rounded-xl border border-white/10 bg-white/5 text-base font-medium';
                 btn.innerText = option;
                 btn.onclick = () => checkAnswer(index, btn);
                 optionsGrid.appendChild(btn);
@@ -266,7 +582,7 @@
             setTimeout(() => {
                 currentQuestion++;
                 if (currentQuestion < quizData.length) { loadQuestion(); } else { showResult(); }
-            }, 1500);
+            }, 1300);
         }
 
         function showResult() {
@@ -274,26 +590,17 @@
             document.getElementById('result-box').classList.remove('hidden');
             document.getElementById('final-score').innerText = `Сіздің нәтижеңіз: ${score}/${quizData.length}`;
         }
+
+        document.getElementById('quiz-restart').addEventListener('click', () => {
+            currentQuestion = 0;
+            score = 0;
+            document.getElementById('score').innerText = 'Ұпай: 0';
+            document.getElementById('result-box').classList.add('hidden');
+            document.getElementById('question-box').classList.remove('hidden');
+            loadQuestion();
+        });
+
         loadQuestion();
     </script>
 </body>
 </html>
-
-                <div class="glass-card p-8 text-center" data-aos="zoom-in" data-aos-delay="300">
-                    <div class="w-16 h-16 bg-blue-500/20 text-blue-500 rounded-full flex items-center justify-center text-2xl mx-auto mb-6">
-                        <i class="fas fa-file-invoice-dollar"></i>
-                    </div>
-                    <h3 class="text-2xl font-bold mb-4">Әкімшілік</h3>
-                    <ul class="text-gray-400 space-y-3 text-left mb-6">
-                        <li><i class="fas fa-check text-blue-500 mr-2"></i> Заңсыз сыйақы алу/беру</li>
-                        <li><i class="fas fa-check text-blue-500 mr-2"></i> Шараларды қабылдамау</li>
-                        <li><i class="fas fa-check text-blue-500 mr-2"></i> <strong class="text-white">Негізгі шара: Айыппұл</strong></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-            <a href="#quiz" class="px-8 py-4 rounded-full font-bold text-lg border border-white/20 hover:bg-white/10 transition">Ойынға өту</a>
-        </div>
-    </section>
