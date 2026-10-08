@@ -521,10 +521,13 @@
 
         // ---- Quiz ----
         const quizModal = document.getElementById('quiz-modal');
-        document.getElementById('quiz-open').addEventListener('click', () => quizModal.classList.remove('hidden'));
-        document.getElementById('quiz-open-2').addEventListener('click', () => quizModal.classList.remove('hidden'));
-        document.getElementById('quiz-close').addEventListener('click', () => quizModal.classList.add('hidden'));
-        quizModal.addEventListener('click', (e) => { if (e.target === quizModal) quizModal.classList.add('hidden'); });
+        function openQuiz() { quizModal.classList.remove('hidden'); quizModal.classList.add('flex'); }
+        function closeQuiz() { quizModal.classList.add('hidden'); quizModal.classList.remove('flex'); }
+
+        document.getElementById('quiz-open').addEventListener('click', openQuiz);
+        document.getElementById('quiz-open-2').addEventListener('click', openQuiz);
+        document.getElementById('quiz-close').addEventListener('click', closeQuiz);
+        quizModal.addEventListener('click', (e) => { if (e.target === quizModal) closeQuiz(); });
 
         const quizData = [
             {
